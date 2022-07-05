@@ -1,25 +1,29 @@
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using AzureKeyVaultPractice.API;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Host.ConfigureAppConfiguration((context, config) =>
+{
+    var builtConfiguration = config.Build();
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    var kvURL = builtConfiguration["KeyVaultConfig:KVUrl"]; 
+    var tenantId = builtConfiguration["KeyVaultConfig:TenantId"];
+    var clientId = builtConfiguration["KeyVaultConfig:ClientId"];
+    var clientSecret = builtConfiguration["KeyVaultConfig:ClientSecretId"];
+
+    var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+    var client = new SecretClient(new Uri(kvURL), credential);
+    config.AddAzureKeyVault(client, new AzureKeyVaultConfigurationOptions());
+});
+
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
+startup.Configure(app, app.Environment);
 app.Run();
