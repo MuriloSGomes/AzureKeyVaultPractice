@@ -11,3 +11,4 @@ Para conectar com o recurso do azure através da aplicação foi necessario a in
 Classes que foram modificadas para acessar o azure keyvault
 - appsettings.json
 - startup.cs
+- Programs.cs
